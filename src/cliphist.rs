@@ -9,31 +9,31 @@ use std::{
 use copypasta::{osx_clipboard::OSXClipboardContext, ClipboardProvider};
 use directories::UserDirs;
 
-pub(crate) const DIR_NAME: &str = ".cliphist";
+pub const DIR_NAME: &str = ".cliphist";
 
-pub(crate) fn get_cliphist_path() -> PathBuf {
+pub fn get_cliphist_path() -> PathBuf {
     let user_dir = UserDirs::new().unwrap();
     let home_dir = user_dir.home_dir();
     PathBuf::from(home_dir).join(DIR_NAME)
 }
 
-pub(crate) fn reset_cliphist() {
+pub fn reset_cliphist() {
     let cliphist_path = get_cliphist_path();
     if cliphist_path.exists() {
         remove_dir_all(cliphist_path).unwrap();
     }
 
     create_dir(get_cliphist_path()).unwrap();
-    fs::write(get_cliphist_path().join("0"), "").unwrap();
+    fs::write(get_cliphist_path().join("0"), "dummy").unwrap();
 }
 
-pub(crate) fn set_clipboard(s: String) {
+pub fn set_clipboard(s: String) {
     let mut clipboard = OSXClipboardContext::new().unwrap();
 
     clipboard.set_contents(s).unwrap();
 }
 
-pub(crate) fn poll_every(duration: Duration) {
+pub fn poll_every(duration: Duration) {
     std::thread::spawn(move || loop {
         // setup cliphist dir if not exist
         let cliphist_path = get_cliphist_path();
@@ -46,8 +46,8 @@ pub(crate) fn poll_every(duration: Duration) {
         let mut clipboard = OSXClipboardContext::new().unwrap();
 
         let curr_content = clipboard.get_contents().unwrap();
-
         let cliphist_path = get_cliphist_path();
+
         if !content_exists(&curr_content) {
             let next_id = get_next_id();
             let next_id_path = cliphist_path.join(next_id);
@@ -58,7 +58,7 @@ pub(crate) fn poll_every(duration: Duration) {
     });
 }
 
-pub(crate) fn get_next_id() -> String {
+pub fn get_next_id() -> String {
     let mut xs = Vec::<String>::new();
 
     let paths = fs::read_dir(get_cliphist_path()).unwrap();
@@ -72,13 +72,13 @@ pub(crate) fn get_next_id() -> String {
         .iter()
         .map(|x| x.parse::<i64>().unwrap())
         .max()
-        .map(|x| x.to_string())
+        .map(|x| (x + 1).to_string())
         .unwrap();
 
     largest_id
 }
 
-pub(crate) fn content_exists(content: &String) -> bool {
+pub fn content_exists(content: &String) -> bool {
     let mut xs = Vec::<String>::new();
 
     let paths = fs::read_dir(get_cliphist_path()).unwrap();
@@ -98,7 +98,7 @@ pub(crate) fn content_exists(content: &String) -> bool {
     hashset.contains(content)
 }
 
-// pub(crate) fn get_prev_clipboard_content(cliphist_path: &PathBuf) -> (String, String) {
+// pub fn get_prev_clipboard_content(cliphist_path: &PathBuf) -> (String, String) {
 //     let cliphist_path_clone = cliphist_path.clone();
 //     let mut xs = Vec::<String>::new();
 
@@ -122,7 +122,7 @@ pub(crate) fn content_exists(content: &String) -> bool {
 //     )
 // }
 
-pub(crate) fn get_all_clipboard_content(cliphist_path: &PathBuf) -> Vec<String> {
+pub fn get_all_clipboard_content(cliphist_path: &PathBuf) -> Vec<String> {
     let cliphist_path_clone = cliphist_path.clone();
     let mut xs = Vec::<String>::new();
 
