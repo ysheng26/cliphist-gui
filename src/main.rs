@@ -22,7 +22,7 @@ fn main() -> eframe::Result {
         ..Default::default()
     };
     eframe::run_native(
-        "eframe template",
+        "cliphist gui",
         native_options,
         Box::new(|cc| Ok(Box::new(cliphist_gui::TemplateApp::new(cc)))),
     )

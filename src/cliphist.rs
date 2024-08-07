@@ -1,4 +1,5 @@
 use std::{
+    collections::HashSet,
     fs::{self, create_dir, remove_dir_all},
     path::PathBuf,
     thread::sleep,
@@ -47,23 +48,20 @@ pub(crate) fn poll_every(duration: Duration) {
         let curr_content = clipboard.get_contents().unwrap();
 
         let cliphist_path = get_cliphist_path();
-        let (prev_content, prev_id) = get_prev_clipboard_content(&cliphist_path);
-
-        if curr_content != prev_content {
-            let next_id = prev_id.parse::<i64>().unwrap() + 1;
-            let next_id = next_id.to_string();
+        if !content_exists(&curr_content) {
+            let next_id = get_next_id();
             let next_id_path = cliphist_path.join(next_id);
             fs::write(next_id_path, curr_content).unwrap();
         }
+
         sleep(duration);
     });
 }
 
-pub(crate) fn get_prev_clipboard_content(cliphist_path: &PathBuf) -> (String, String) {
-    let cliphist_path_clone = cliphist_path.clone();
+pub(crate) fn get_next_id() -> String {
     let mut xs = Vec::<String>::new();
 
-    let paths = fs::read_dir(cliphist_path).unwrap();
+    let paths = fs::read_dir(get_cliphist_path()).unwrap();
     for path in paths {
         if let Some(filename) = path.unwrap().path().file_name() {
             let filename = filename.to_str().unwrap();
@@ -77,11 +75,52 @@ pub(crate) fn get_prev_clipboard_content(cliphist_path: &PathBuf) -> (String, St
         .map(|x| x.to_string())
         .unwrap();
 
-    (
-        fs::read_to_string(cliphist_path_clone.join(largest_id.clone())).unwrap(),
-        largest_id,
-    )
+    largest_id
 }
+
+pub(crate) fn content_exists(content: &String) -> bool {
+    let mut xs = Vec::<String>::new();
+
+    let paths = fs::read_dir(get_cliphist_path()).unwrap();
+    for path in paths {
+        if let Some(filename) = path.unwrap().path().file_name() {
+            let filename = filename.to_str().unwrap();
+            xs.push(filename.to_string());
+        }
+    }
+
+    // fs::read_to_string(cliphist_path_clone.join(largest_id.clone())).unwrap(),
+    let hashset = HashSet::<String>::from_iter(
+        xs.iter()
+            .map(|id| fs::read_to_string(get_cliphist_path().join(id)).unwrap()),
+    );
+
+    hashset.contains(content)
+}
+
+// pub(crate) fn get_prev_clipboard_content(cliphist_path: &PathBuf) -> (String, String) {
+//     let cliphist_path_clone = cliphist_path.clone();
+//     let mut xs = Vec::<String>::new();
+
+//     let paths = fs::read_dir(cliphist_path).unwrap();
+//     for path in paths {
+//         if let Some(filename) = path.unwrap().path().file_name() {
+//             let filename = filename.to_str().unwrap();
+//             xs.push(filename.to_string());
+//         }
+//     }
+//     let largest_id = xs
+//         .iter()
+//         .map(|x| x.parse::<i64>().unwrap())
+//         .max()
+//         .map(|x| x.to_string())
+//         .unwrap();
+
+//     (
+//         fs::read_to_string(cliphist_path_clone.join(largest_id.clone())).unwrap(),
+//         largest_id,
+//     )
+// }
 
 pub(crate) fn get_all_clipboard_content(cliphist_path: &PathBuf) -> Vec<String> {
     let cliphist_path_clone = cliphist_path.clone();
