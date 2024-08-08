@@ -22,7 +22,7 @@ pub fn reset_cliphist() {
     if cliphist_path.exists() {
         remove_dir_all(cliphist_path).unwrap();
     }
-
+    set_clipboard("".to_string());
     create_dir(get_cliphist_path()).unwrap();
     fs::write(get_cliphist_path().join("0"), "dummy").unwrap();
 }

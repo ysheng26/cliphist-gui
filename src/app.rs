@@ -53,18 +53,22 @@ impl eframe::App for TemplateApp {
 
             egui::menu::bar(ui, |ui| {
                 // NOTE: no File->Quit on web pages!
-                let is_web = cfg!(target_arch = "wasm32");
-                if !is_web {
-                    ui.menu_button("File", |ui| {
-                        if ui.button("Clear").clicked() {
-                            cliphist::reset_cliphist();
-                        }
-                        if ui.button("Quit").clicked() {
-                            ctx.send_viewport_cmd(egui::ViewportCommand::Close);
-                        }
-                    });
-                    ui.add_space(16.0);
+                // let is_web = cfg!(target_arch = "wasm32");
+                // if !is_web {
+                //     ui.menu_button("File", |ui| {
+                //         if ui.button("Clear").clicked() {
+                //             cliphist::reset_cliphist();
+                //         }
+                //         if ui.button("Quit").clicked() {
+                //             ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+                //         }
+                //     });
+                //     ui.add_space(16.0);
+                // }
+                if ui.button("Clear clipboard history").clicked() {
+                    cliphist::reset_cliphist();
                 }
+                ui.add_space(16.0);
 
                 egui::widgets::global_dark_light_mode_buttons(ui);
             });
@@ -77,23 +81,26 @@ impl eframe::App for TemplateApp {
             let cliphist_path = cliphist::get_cliphist_path();
             let xs = cliphist::get_all_clipboard_content(&cliphist_path);
 
-            for (i, x) in xs.iter().enumerate() {
-                if i == xs.len() - 1 {
-                    // the last one is the dummy
-                    continue;
-                }
-                ui.horizontal(|ui| {
-                    if ui.button("copy").clicked() {
-                        cliphist::set_clipboard(x.to_string());
+            egui::ScrollArea::vertical().show(ui, |ui| {
+                // Add a lot of widgets here.
+                for (i, x) in xs.iter().enumerate() {
+                    if i == xs.len() - 1 {
+                        // the last one is the dummy
+                        continue;
                     }
-                    ui.label(format!("{x}"));
-                });
-                ui.separator();
-            }
+                    ui.horizontal(|ui| {
+                        if ui.button("copy").clicked() {
+                            cliphist::set_clipboard(x.to_string());
+                        }
+                        ui.label(format!("{x}"));
+                    });
+                    ui.separator();
+                }
 
-            ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
-                powered_by_egui_and_eframe(ui);
-                egui::warn_if_debug_build(ui);
+                ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
+                    powered_by_egui_and_eframe(ui);
+                    egui::warn_if_debug_build(ui);
+                });
             });
         });
     }
