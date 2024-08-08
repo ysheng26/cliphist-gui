@@ -8,6 +8,7 @@ use std::{
 
 use copypasta::{osx_clipboard::OSXClipboardContext, ClipboardProvider};
 use directories::UserDirs;
+use rand::seq::SliceRandom;
 
 pub const DIR_NAME: &str = ".cliphist";
 
@@ -22,7 +23,12 @@ pub fn reset_cliphist() {
     if cliphist_path.exists() {
         remove_dir_all(cliphist_path).unwrap();
     }
-    set_clipboard("".to_string());
+
+    let quotes = vec![
+        String::from("sheeh pog bussin"),
+        String::from("bingus bungus bowsers burrito"),
+    ];
+    set_clipboard(quotes.choose(&mut rand::thread_rng()).unwrap().to_owned());
     create_dir(get_cliphist_path()).unwrap();
     fs::write(get_cliphist_path().join("0"), "dummy").unwrap();
 }
